@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ny Diary</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffc0cb">
+    <style>
+        * { 
+            margin: 100; 
+            padding: 100; 
+            box-sizing: border-box; 
+            font-family: Arial, sans-serif; 
+        }
+        body { 
+            background: #ffe6ea; 
+            padding: 100px; 
+            
+        }
+        h1 { 
+            color: #d63384; 
+            text-align: center; 
+            margin-bottom: 10px; 
+        }
+        #input-container { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 10px; 
+        }
+        #diary-input { 
+            flex: 1; 
+            padding: 10px; 
+            border: 2px solid #ffc0cb; 
+            border-radius: 5px; 
+            font-size: 16px; 
+        }
+        #add-btn { 
+            padding: 30px 10px; 
+            background: #ffc0cb; 
+            border: none; 
+            border-radius: 5px; 
+            color: #333; 
+            cursor: pointer; 
+            font-weight: bold; 
+        }
+        #add-btn:hover { 
+            background: #ff9aa2; 
+        }
+        #diary-list { 
+            list-style: none; 
+        }
+        .diary-item { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-bottom: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-left: 5px solid #d63384; 
+        }
+        .delete-btn { 
+            background: #d63384; 
+            color: white; 
+            border: none; 
+            padding: 20px 10px; 
+            border-radius: 3px; 
+            cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+    <h1>My Diary</h1>
+    <div id="input-container">
+        <input type="text" id="diary-input" placeholder="Write your diary entry here...">
+        <button id="add-btn">Add story</button>
+    </div>
+    <ul id="diary-list"></ul>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const entries = JSON.parse(localStorage.getItem('diaryEntries')) || [];
+            entries.forEach(renderEntry);
+            document.getElementById('add-btn').addEventListener('click', () => {
+                const input = document.getElementById('diary-input');
+                const text = input.value.trim();
+                if (text) {
+                    const entry = { id: Date.now(), text, date: new Date().toLocaleString() };
+                    entries.push(entry);
+                    localStorage.setItem('diaryEntries', JSON.stringify(entries));
+                    renderEntry(entry);
+                    input.value = '';
+                }
+            });
+
+            document.getElementById('diary-list').addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const id = parseInt(e.target.dataset.id);
+                    const index = entries.findIndex(entry => entry.id === id);
+                    entries.splice(index, 1);
+                    localStorage.setItem('diaryEntries', JSON.stringify(entries));
+                    e.target.parentElement.remove();
+                }
+            });
+        });
+
+        function renderEntry(entry) {
+            const li = document.createElement('li');
+            li.className = 'diary-item';
+            li.innerHTML = `
+                <div>
+                    <p>${entry.text}</p>
+                    <small style="color: #888;">${entry.date}</small>
+                </div>
+                <button class="delete-btn" data-id="${entry.id}">Delete</button>
+            `;
+            document.getElementById('diary-list').appendChild(li);
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service Worker registered:', reg))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
